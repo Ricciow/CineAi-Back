@@ -49,3 +49,13 @@ async def create_conversation(payload: ConversationCreate):
     session = CustomSession(payload.conversation_id, payload.title, payload.description)
     await session.clear_session()
     
+@app.get("/all-conversations")
+async def list_conversations():
+    path = "./conversations"
+    conversation_files = os.listdir(path)
+    conversations_list = []
+    for i in conversation_files:
+        with open(path+"/"+i, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        conversations_list.append({"session_id":data["session_id"], "title":data["title"],"description":data["description"] })
+    return conversations_list
