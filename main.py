@@ -1,9 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import os
-import asyncio
-from dotenv import load_dotenv
-from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel, RunConfig, SQLiteSession
+from agents import Runner
 import json
 from ai_config import config
 from custom_agents import *
@@ -40,6 +38,14 @@ async def get_conversation_history(payload: ConversationBase):
 
 @app.delete("/conversation-history")
 async def delete_conversation_history(payload: ConversationBase):
-    session = CustomSession(payload.conversation_id)
+    try:
+        os.remove("./conversations/"+payload.conversation_id+".json")
+        return "200"
+    except FileNotFoundError:
+        return "File not found"
+
+@app.post("/conversation")
+async def create_conversation(payload: ConversationCreate):
+    session = CustomSession(payload.conversation_id, payload.title, payload.description)
     await session.clear_session()
     
