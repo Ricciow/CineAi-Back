@@ -8,7 +8,7 @@ import json
 from ai_config import config
 from custom_agents import *
 from custom_session import CustomSession
-
+from models import ConversationBase, ConversationCreate, MessageRequest
 
 app = FastAPI()
 
@@ -22,15 +22,15 @@ def extract_text(item):
     return None
 
 @app.post("/message")
-async def send_message(conversation_id:str, user_input:str):
-    session = CustomSession(conversation_id)
-    result = await Runner.run(test_agent, user_input, run_config = config, session = session)
+async def send_message(payload: MessageRequest):
+    session = CustomSession(payload.conversation_id)
+    result = await Runner.run(test_agent, payload.user_input, run_config = config, session = session)
     content = {"content": result.final_output, "role": "assistant"}
     return content
 
 @app.get("/conversation-history")
-async def get_conversation_history(conversation_id:str):
-    session = CustomSession(conversation_id)
+async def get_conversation_history(payload: ConversationBase):
+    session = CustomSession(payload.conversation_id)
     conversation_content = await session.get_items()
     conversation = []
     for item in conversation_content:
@@ -39,7 +39,7 @@ async def get_conversation_history(conversation_id:str):
     return conversation
 
 @app.delete("/conversation-history")
-async def delete_conversation_history(conversation_id:str):
-    session = CustomSession(conversation_id)
+async def delete_conversation_history(payload: ConversationBase):
+    session = CustomSession(payload.conversation_id)
     await session.clear_session()
     
