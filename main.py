@@ -1,5 +1,7 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 import os
 from agents import Runner
 import json
@@ -9,6 +11,17 @@ from custom_session import CustomSession
 from models import ConversationBase, ConversationCreate, MessageRequest
 
 app = FastAPI()
+load_dotenv()
+origins = os.environ.get("FRONTEND_URLS")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,       # Permite as origens da lista
+    allow_credentials=True,
+    allow_methods=["*"],         # Permite todos os métodos (GET, POST, etc.)
+    allow_headers=["*"],         # Permite todos os cabeçalhos
+)
+
 
 #Extrai apenas as mensagens e os "roles"
 def extract_text(item):
@@ -34,7 +47,10 @@ async def get_conversation_history(payload: ConversationBase):
     for item in conversation_content:
         message = extract_text(item)
         conversation.append(message)
-    return conversation
+    if conversation != []:
+        return conversation
+    else:
+        raise HTTPException(status_code=404, detail="Conversation not found")
 
 @app.delete("/conversation-history")
 async def delete_conversation_history(payload: ConversationBase):
@@ -42,7 +58,7 @@ async def delete_conversation_history(payload: ConversationBase):
         os.remove("./conversations/"+payload.conversation_id+".json")
         return "200"
     except FileNotFoundError:
-        return "File not found"
+        raise HTTPException(status_code=404, detail="Conversation not found")
 
 @app.post("/conversation")
 async def create_conversation(payload: ConversationCreate):
@@ -58,4 +74,6 @@ async def list_conversations():
         with open(path+"/"+i, "r", encoding="utf-8") as f:
             data = json.load(f)
         conversations_list.append({"session_id":data["session_id"], "title":data["title"],"description":data["description"] })
+    if conversations_list == []:
+        raise HTTPException(status_code=404, detail="No conversations found")
     return conversations_list
