@@ -7,6 +7,7 @@ from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel, RunCo
 import json
 from ai_config import config
 from custom_agents import *
+from custom_session import CustomSession
 
 
 app = FastAPI()
@@ -20,18 +21,25 @@ def extract_text(item):
         return {"content":message, "role":"assistant"}
     return None
 
-@app.post("/conversation")
+@app.post("/message")
 async def send_message(conversation_id:str, user_input:str):
-    session = SQLiteSession(conversation_id, "conversations.db")
+    session = CustomSession(conversation_id)
     result = await Runner.run(test_agent, user_input, run_config = config, session = session)
-    return result.final_output
+    content = {"content": result.final_output, "role": "assistant"}
+    return content
 
 @app.get("/conversation-history")
 async def get_conversation_history(conversation_id:str):
-    session = SQLiteSession(conversation_id, "conversations.db")
+    session = CustomSession(conversation_id)
     conversation_content = await session.get_items()
     conversation = []
     for item in conversation_content:
         message = extract_text(item)
         conversation.append(message)
     return conversation
+
+@app.delete("/conversation-history")
+async def delete_conversation_history(conversation_id:str):
+    session = CustomSession(conversation_id)
+    await session.clear_session()
+    
