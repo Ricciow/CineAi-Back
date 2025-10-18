@@ -11,5 +11,4 @@ class ConversationCreate(ConversationBase):
     description: str
 
 class MessageRequest(BaseModel):
-    conversation_id: str
     user_input: str

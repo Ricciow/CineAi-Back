@@ -32,16 +32,16 @@ def extract_text(item):
         return {"content":message, "role":"assistant"}
     return None
 
-@app.post("/message")
-async def send_message(payload: MessageRequest):
-    session = CustomSession(payload.conversation_id)
+@app.post("/message/{conversation_id}")
+async def send_message(conversation_id: str, payload: MessageRequest):
+    session = CustomSession(conversation_id)
     result = await Runner.run(test_agent, payload.user_input, run_config = config, session = session)
     content = {"content": result.final_output, "role": "assistant"}
     return content
 
-@app.get("/conversation-history")
-async def get_conversation_history(payload: ConversationBase):
-    session = CustomSession(payload.conversation_id)
+@app.get("/conversation-history/{conversation_id}")
+async def get_conversation_history(conversation_id: str):
+    session = CustomSession(conversation_id)
     conversation_content = await session.get_items()
     conversation = []
     for item in conversation_content:
@@ -52,17 +52,17 @@ async def get_conversation_history(payload: ConversationBase):
     else:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-@app.delete("/conversation-history")
-async def delete_conversation_history(payload: ConversationBase):
+@app.delete("/conversation-history/{conversation_id}")
+async def delete_conversation_history(conversation_id: str):
     try:
-        os.remove("./conversations/"+payload.conversation_id+".json")
+        os.remove("./conversations/"+conversation_id+".json")
         return "200"
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-@app.post("/conversation")
-async def create_conversation(payload: ConversationCreate):
-    session = CustomSession(payload.conversation_id, payload.title, payload.description)
+@app.post("/conversation/{conversation_id}")
+async def create_conversation(conversation_id: str, payload: ConversationCreate):
+    session = CustomSession(conversation_id, payload.title, payload.description)
     await session.clear_session()
     
 @app.get("/all-conversations")
