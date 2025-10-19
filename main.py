@@ -39,7 +39,7 @@ async def send_message(conversation_id: str, payload: MessageRequest):
     content = {"content": result.final_output, "role": "assistant"}
     return content
 
-@app.get("/conversation-history/{conversation_id}")
+@app.get("/conversation/history/{conversation_id}")
 async def get_conversation_history(conversation_id: str):
     session = CustomSession(conversation_id)
     conversation_content = await session.get_items()
@@ -52,7 +52,7 @@ async def get_conversation_history(conversation_id: str):
     else:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-@app.delete("/conversation-history/{conversation_id}")
+@app.delete("/conversation/{conversation_id}")
 async def delete_conversation_history(conversation_id: str):
     try:
         os.remove("./conversations/"+conversation_id+".json")
@@ -65,7 +65,7 @@ async def create_conversation(conversation_id: str, payload: ConversationCreate)
     session = CustomSession(conversation_id, payload.title, payload.description)
     await session.clear_session()
     
-@app.get("/all-conversations")
+@app.get("/conversation")
 async def list_conversations():
     path = "./conversations"
     conversation_files = os.listdir(path)
@@ -73,7 +73,7 @@ async def list_conversations():
     for i in conversation_files:
         with open(path+"/"+i, "r", encoding="utf-8") as f:
             data = json.load(f)
-        conversations_list.append({"session_id":data["session_id"], "title":data["title"],"description":data["description"] })
+        conversations_list.append({"id":data["session_id"], "title":data["title"],"description":data["description"] })
     if conversations_list == []:
         raise HTTPException(status_code=404, detail="No conversations found")
     return conversations_list
