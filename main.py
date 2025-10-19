@@ -8,7 +8,7 @@ import json
 from ai_config import config
 from custom_agents import *
 from custom_session import CustomSession
-from models import ConversationBase, ConversationCreate, MessageRequest
+from models import ConversationCreate, MessageRequest
 
 app = FastAPI()
 load_dotenv()
@@ -47,10 +47,11 @@ async def get_conversation_history(conversation_id: str):
     for item in conversation_content:
         message = extract_text(item)
         conversation.append(message)
-    if conversation != []:
-        return conversation
-    else:
+    
+    if(not os.path.exists("./conversations/"+conversation_id+".json")):
         raise HTTPException(status_code=404, detail="Conversation not found")
+
+    return conversation
 
 @app.delete("/conversation/{conversation_id}")
 async def delete_conversation_history(conversation_id: str):
@@ -60,10 +61,17 @@ async def delete_conversation_history(conversation_id: str):
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-@app.post("/conversation/{conversation_id}")
-async def create_conversation(conversation_id: str, payload: ConversationCreate):
+@app.post("/conversation")
+async def create_conversation(payload: ConversationCreate):
+    i = 0
+    while os.path.exists("./conversations/"+str(i)+".json"):
+        i += 1
+    conversation_id = str(i)
+
     session = CustomSession(conversation_id, payload.title, payload.description)
     await session.clear_session()
+
+    return { "id": conversation_id, "title": payload.title, "description": payload.description }
     
 @app.get("/conversation")
 async def list_conversations():
@@ -74,6 +82,4 @@ async def list_conversations():
         with open(path+"/"+i, "r", encoding="utf-8") as f:
             data = json.load(f)
         conversations_list.append({"id":data["session_id"], "title":data["title"],"description":data["description"] })
-    if conversations_list == []:
-        raise HTTPException(status_code=404, detail="No conversations found")
     return conversations_list
