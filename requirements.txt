@@ -1,3 +1,4 @@
 fastapi
-openai-agents
+openai
 python-dotenv
+pymongo
