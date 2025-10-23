@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from AI.aiManager import gerarRespostaStream
 
 from AI.Modelos import Modelos
+from AI.Personas import Personas
 from database.chats import *
 
 app = FastAPI()
@@ -35,9 +36,10 @@ class ConversationCreate(BaseModel):
 class MessageRequest(BaseModel):
     user_input: str
     model: Modelos = Modelos.DeepSeek
+    persona: Personas = Personas.ROTEIRISTA
 
 
-def gerarResposta(id: str, prompt : str, modelo : Modelos = Modelos.DeepSeek):
+def gerarResposta(id: str, prompt : str, modelo : Modelos = Modelos.DeepSeek, persona : Personas = Personas.ROTEIRISTA):
     userPrompt = {"role": "user", "content": prompt}
 
     historico = getChatHistory(id)["messages"]
@@ -64,7 +66,7 @@ def gerarResposta(id: str, prompt : str, modelo : Modelos = Modelos.DeepSeek):
 
 @app.post("/message/{conversation_id}")
 async def send_message(conversation_id: str, payload: MessageRequest):
-    return StreamingResponse(gerarResposta(conversation_id, payload.user_input, modelo=payload.model), media_type="text/event-stream")
+    return StreamingResponse(gerarResposta(conversation_id, payload.user_input, modelo=payload.model, persona=payload.persona), media_type="text/event-stream")
 
 @app.get("/conversation/history/{conversation_id}",)
 async def get_conversation_history(conversation_id: str):

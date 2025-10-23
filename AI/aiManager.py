@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 from AI.Modelos import Modelos
+from AI.Personas import Personas
 
 load_dotenv()
 
@@ -13,7 +14,12 @@ client = OpenAI(
   api_key=api_key,
 )
 
-def gerarRespostaStream(historico : list, modelo : Modelos = Modelos.DeepSeek):
+def gerarRespostaStream(historico : list, modelo : Modelos = Modelos.DeepSeek, persona : Personas = Personas.ROTEIRISTA):
+    historico.insert(0, {
+        "role": "system", 
+        "content": persona.value
+    })
+
     completion = client.chat.completions.create(
         model = modelo.value,
         messages = historico,
