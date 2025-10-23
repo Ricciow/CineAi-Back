@@ -25,6 +25,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class ConversationUpdate(BaseModel):
+    title: str
+
 class ConversationCreate(BaseModel):
     title: str
     description: str
@@ -63,7 +66,7 @@ def gerarResposta(id: str, prompt : str, modelo : Modelos = Modelos.DeepSeek):
 async def send_message(conversation_id: str, payload: MessageRequest):
     return StreamingResponse(gerarResposta(conversation_id, payload.user_input, modelo=payload.model), media_type="text/event-stream")
 
-@app.get("/conversation/history/{conversation_id}")
+@app.get("/conversation/history/{conversation_id}",)
 async def get_conversation_history(conversation_id: str):
    resultado = getChatHistory(conversation_id)
 
@@ -72,7 +75,16 @@ async def get_conversation_history(conversation_id: str):
 
    return resultado["messages"]
 
-@app.delete("/conversation/{conversation_id}")
+@app.get("/conversation/{conversation_id}",)
+async def get_conversation_history(conversation_id: str):
+   resultado = getChat(conversation_id)
+
+   if(resultado == None):
+        raise HTTPException(status_code=404, detail="Conversa não encontrada.")
+
+   return resultado
+
+@app.delete("/conversation/{conversation_id}", status_code=204)
 async def delete_conversation(conversation_id: str):
     resultado = deleteChat(conversation_id)
 
@@ -81,8 +93,11 @@ async def delete_conversation(conversation_id: str):
 
     return {"message": "Chat deleted successfully."}
 
+@app.patch("/conversation/{conversation_id}")
+async def update_conversation_title(conversation_id: str, payload: ConversationUpdate):
+    return updateChatTitle(conversation_id, payload.title)
 
-@app.post("/conversation")
+@app.post("/conversation", status_code=201)
 async def create_conversation(payload: ConversationCreate):
     return createChat(payload.title, payload.description)
     

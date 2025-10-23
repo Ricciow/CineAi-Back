@@ -21,6 +21,10 @@ def getChatHistory(id):
     queryResult = chats.find_one({"id": id}, {"_id": 0, "messages": 1})
     return queryResult
 
+def getChat(id):
+    queryResult = chats.find_one({"id": id}, {"_id": 0, "title": 1, "description": 1, "messages": 1})
+    return queryResult
+
 def getAllChatsDescriptions():
     queryResult = chats.find({}, {"_id": 0, "title": 1, "description": 1, "id": 1})
     return list(queryResult)
@@ -30,3 +34,6 @@ def addMessage(id, message):
 
 def removeLastMessage(id):
     chats.update_one({"id": id}, {"$pop": {"messages": 1}})
+
+def updateChatTitle(id, title):
+    chats.update_one({"id": id}, {"$set": {"title": title}})
