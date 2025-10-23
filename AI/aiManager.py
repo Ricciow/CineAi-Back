@@ -14,7 +14,7 @@ client = OpenAI(
   api_key=api_key,
 )
 
-def gerarRespostaStream(historico : list, modelo : Modelos = Modelos.DeepSeek, persona : Personas = Personas.ROTEIRISTA):
+def gerarRespostaStream(historico : list, modelo : Modelos = Modelos.DeepSeek, persona : Personas = Personas.Roteirista):
     historico.insert(0, {
         "role": "system", 
         "content": persona.value

@@ -36,10 +36,10 @@ class ConversationCreate(BaseModel):
 class MessageRequest(BaseModel):
     user_input: str
     model: Modelos = Modelos.DeepSeek
-    persona: Personas = Personas.ROTEIRISTA
+    persona: Personas = Personas.Roteirista
 
 
-def gerarResposta(id: str, prompt : str, modelo : Modelos = Modelos.DeepSeek, persona : Personas = Personas.ROTEIRISTA):
+def gerarResposta(id: str, prompt : str, modelo : Modelos = Modelos.DeepSeek, persona : Personas = Personas.Roteirista):
     userPrompt = {"role": "user", "content": prompt}
 
     historico = getChatHistory(id)["messages"]
