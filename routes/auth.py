@@ -40,7 +40,7 @@ async def login(payload: authRequest, response: Response):
     if(result["token"] == None):
         raise HTTPException(status_code=401, detail="E-mail ou senha inválidos.")
     
-    response.set_cookie(key="refresh_token", value=result["refresh_token"], samesite="none", secure=True, max_age=int(datetime.timedelta(days=7).total_seconds()))
+    response.set_cookie(key="refresh_token", value=result["refresh_token"], samesite="none", secure=True, max_age=int(datetime.timedelta(days=7).total_seconds()), httponly=True)
 
     return {"token": result["token"]}
 
