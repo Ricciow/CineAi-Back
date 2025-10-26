@@ -2,4 +2,6 @@ fastapi
 openai
 python-dotenv
 pymongo
+argon2-cffi
+PyJWT
 uvicorn

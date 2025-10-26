@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from dotenv import load_dotenv
 from routes.conversation import router as conversationRouter
+from routes.auth import router as authRouter
 
 app = FastAPI()
 load_dotenv()
@@ -19,3 +20,4 @@ app.add_middleware(
 )
 
 app.include_router(conversationRouter)
+app.include_router(authRouter)
