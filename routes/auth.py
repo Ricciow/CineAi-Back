@@ -28,6 +28,9 @@ class authRequest(BaseModel):
     email: str
     senha: str
 
+class registerRequest(authRequest):
+    username: str
+
 @router.post("/login")
 async def login(payload: authRequest):
     token = loginDatabase(payload.email, payload.senha)
@@ -38,8 +41,11 @@ async def login(payload: authRequest):
     return {"token": token}
 
 @router.post("/register", status_code=201)
-async def register(payload: authRequest):
-    if(registerDatabase(payload.email, payload.senha)):
-        return {"message": "User created successfully."}
+async def register(payload: registerRequest):
+    result = registerDatabase(payload.email, payload.senha, payload.username)
+    if(result["success"]):
+        return {
+            "detail": result["message"]
+        }
     else:
-        raise HTTPException(status_code=400, detail="Erro ao criar usuário.")
+        raise HTTPException(status_code=400, detail=result["message"])

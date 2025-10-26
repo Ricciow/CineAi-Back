@@ -10,6 +10,7 @@ import os
 # {
 #   "_id": "user_id_abc",
 #   "email": "usuario@email.com",
+#   "username": "username",
 #   "senha": "hash_da_senha"
 # }
 
@@ -18,21 +19,35 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 ph = PasswordHasher()
 
-def register(email, senha):
-    if(users.find_one({"email": email})):
-        return False
+def register(email, senha, username):
+    exists = users.find_one({"$or": [{"email": email}, {"username": username}]})
+    if(exists):
+        if(exists["email"] == email):
+            return {
+                "message": "Email already exists.",
+                "success": False
+            }
+        else:
+            return {
+                "message": "Username already exists.",
+                "success": False
+            }
     
     senha = ph.hash(senha)
 
     user_document = {
         "email": email, 
-        "senha": senha
+        "senha": senha,
+        "username": username
     }
 
     users.insert_one(user_document)
     user_document["_id"] = str(user_document["_id"])
 
-    return True
+    return {
+        "message": "User created successfully.",
+        "success": True
+    }
 
 def login(email, senha):
     """Valida login e retorna um JWT"""
@@ -45,6 +60,7 @@ def login(email, senha):
 
     token = jwt.encode({
         "user_id": str(user_document["_id"]), 
+        "username": user_document["username"],
         "exp": datetime.datetime.now() + datetime.timedelta(minutes=30)
         }, 
         key=SECRET_KEY,
