@@ -66,7 +66,7 @@ def login(email, senha):
 
     refresh_token = jwt.encode({
         "user_id": str(user_document["_id"]), 
-        "exp": datetime.datetime.now() + datetime.timedelta(days=7)
+        "exp": (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)).timestamp()
         }, 
         key=SECRET_KEY,
         algorithm="HS256"
@@ -81,7 +81,7 @@ def login(email, senha):
     token = jwt.encode({
         "user_id": str(user_document["_id"]), 
         "username": user_document["username"],
-        "exp": datetime.datetime.now() + datetime.timedelta(minutes=15)
+        "exp": (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15)).timestamp()
         }, 
         key=SECRET_KEY,
         algorithm="HS256"
@@ -115,7 +115,7 @@ def validateRefreshToken(refresh_token):
         token = jwt.encode({
             "user_id": str(user_document["_id"]), 
             "username": user_document["username"],
-            "exp": datetime.datetime.now() + datetime.timedelta(minutes=15)
+            "exp": (datetime.datetime.now() + datetime.timedelta(minutes=15)).timestamp()
             }, 
             key=SECRET_KEY,
             algorithm="HS256"

@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from AI.aiManager import gerarRespostaStream
 
 from AI.Modelos import Modelos
 from AI.Personas import Personas
 from database.chats import *
+
+from routes.auth import get_current_user_id
 
 import json
 
@@ -53,7 +55,7 @@ def gerarResposta(id: str, prompt : str, modelo : Modelos = Modelos.DeepSeek, pe
     return []
 
 @router.get("/history/{conversation_id}",)
-async def get_conversation_history(conversation_id: str):
+async def get_conversation_history(conversation_id: str, user_id: str = Depends(get_current_user_id)):
    resultado = getChatHistory(conversation_id)
 
    if(resultado == None):
@@ -62,7 +64,7 @@ async def get_conversation_history(conversation_id: str):
    return resultado["messages"]
 
 @router.get("/{conversation_id}",)
-async def get_conversation_history(conversation_id: str):
+async def get_conversation_history(conversation_id: str, user_id: str = Depends(get_current_user_id)):
    resultado = getChat(conversation_id)
 
    if(resultado == None):
@@ -71,7 +73,7 @@ async def get_conversation_history(conversation_id: str):
    return resultado
 
 @router.delete("/{conversation_id}", status_code=204)
-async def delete_conversation(conversation_id: str):
+async def delete_conversation(conversation_id: str, user_id: str = Depends(get_current_user_id)):
     resultado = deleteChat(conversation_id)
 
     if(not resultado):
@@ -80,18 +82,18 @@ async def delete_conversation(conversation_id: str):
     return {"message": "Chat deleted successfully."}
 
 @router.patch("/{conversation_id}")
-async def update_conversation_title(conversation_id: str, payload: ConversationUpdate):
+async def update_conversation_title(conversation_id: str, payload: ConversationUpdate, user_id: str = Depends(get_current_user_id)):
     return updateChatTitle(conversation_id, payload.title)
 
 @router.post("/{conversation_id}/message")
-async def send_message(conversation_id: str, payload: MessageRequest):
+async def send_message(conversation_id: str, payload: MessageRequest, user_id: str = Depends(get_current_user_id)):
     return StreamingResponse(gerarResposta(conversation_id, payload.user_input, modelo=payload.model, persona=payload.persona), media_type="text/event-stream")
 
 
 @router.post("/", status_code=201)
-async def create_conversation(payload: ConversationCreate):
+async def create_conversation(payload: ConversationCreate, user_id: str = Depends(get_current_user_id)):
     return createChat(payload.title, payload.description)
     
 @router.get("/")
-async def list_conversations():
+async def list_conversations(user_id: str = Depends(get_current_user_id)):
     return getAllChatsDescriptions()

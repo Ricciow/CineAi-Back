@@ -14,16 +14,15 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 async def get_current_user_id(token: str = Depends(oauth2_scheme)):
     """Utilizado para validar JWT e retornar o ID de usuário, para utilizar, adicione-o na função como id : str = Depends(get_current_user_id)"""
-    payload = validateJWT(token)
+    user_id = validateJWT(token)
     
-    if not payload:
+    if not user_id:
         raise HTTPException(
             status_code=401,
             detail="Token inválido ou expirado",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    user_id = payload.get("user_id")
+
     return user_id
 
 class authRequest(BaseModel):
@@ -40,14 +39,12 @@ async def login(payload: authRequest, response: Response):
     if(result["token"] == None):
         raise HTTPException(status_code=401, detail="E-mail ou senha inválidos.")
     
-    response.set_cookie(key="refresh_token", value=result["refresh_token"])
+    response.set_cookie(key="refresh_token", value=result["refresh_token"], samesite="none", secure=True)
 
     return {"token": result["token"]}
 
 @router.post("/login/refresh")
 async def refreshToken(refresh_token: Annotated[str | None, Cookie()] = None):
-    print(refresh_token)
-
     result = validateRefreshToken(refresh_token)
 
     if(result == None):
