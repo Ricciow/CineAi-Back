@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from database.users import validateJWT, login as loginDatabase, register as registerDatabase
 from pydantic import BaseModel
+from email_validator import validate_email
 
 router = APIRouter(
     prefix="/auth",
@@ -42,6 +43,11 @@ async def login(payload: authRequest):
 
 @router.post("/register", status_code=201)
 async def register(payload: registerRequest):
+    try:
+        validate_email(payload.email)
+    except:
+        raise HTTPException(status_code=400, detail="E-mail inválido.")
+
     result = registerDatabase(payload.email, payload.senha, payload.username)
     if(result["success"]):
         return {

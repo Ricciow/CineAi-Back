@@ -4,4 +4,5 @@ python-dotenv
 pymongo
 argon2-cffi
 PyJWT
+email-validator
 uvicorn
