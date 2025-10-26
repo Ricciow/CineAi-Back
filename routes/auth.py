@@ -37,7 +37,7 @@ async def login(payload: authRequest):
     token = loginDatabase(payload.email, payload.password)
     
     if(token == None):
-        raise HTTPException(status_code=401, detail="E-mail ou password inválidos.")
+        raise HTTPException(status_code=401, detail="E-mail ou senha inválidos.")
     
     return {"token": token}
 
