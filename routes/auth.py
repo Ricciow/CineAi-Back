@@ -28,7 +28,7 @@ async def login(email: str, senha: str):
     token = loginDatabase(email, senha)
     return {"token": token}
 
-@router.post("/register")
+@router.post("/register", status_code=201)
 async def register(email: str, senha: str):
     if(registerDatabase(email, senha)):
         return {"message": "User created successfully."}
