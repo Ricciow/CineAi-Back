@@ -27,17 +27,17 @@ async def get_current_user_id(token: str = Depends(oauth2_scheme)):
 
 class authRequest(BaseModel):
     email: str
-    senha: str
+    password: str
 
 class registerRequest(authRequest):
     username: str
 
 @router.post("/login")
 async def login(payload: authRequest):
-    token = loginDatabase(payload.email, payload.senha)
+    token = loginDatabase(payload.email, payload.password)
     
     if(token == None):
-        raise HTTPException(status_code=401, detail="E-mail ou senha inválidos.")
+        raise HTTPException(status_code=401, detail="E-mail ou password inválidos.")
     
     return {"token": token}
 
@@ -48,7 +48,7 @@ async def register(payload: registerRequest):
     except:
         raise HTTPException(status_code=400, detail="E-mail inválido.")
 
-    result = registerDatabase(payload.email, payload.senha, payload.username)
+    result = registerDatabase(payload.email, payload.password, payload.username)
     if(result["success"]):
         return {
             "detail": result["message"]
