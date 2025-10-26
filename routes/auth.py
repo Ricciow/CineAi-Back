@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Response, Cookie
 from fastapi.security import OAuth2PasswordBearer
-from database.users import validateJWT, login as loginDatabase, register as registerDatabase
+from database.users import validateJWT, login as loginDatabase, register as registerDatabase, validateRefreshToken, logoff
 from pydantic import BaseModel
 from email_validator import validate_email
+from typing import Annotated
 
 router = APIRouter(
     prefix="/auth",
@@ -33,13 +34,30 @@ class registerRequest(authRequest):
     username: str
 
 @router.post("/login")
-async def login(payload: authRequest):
-    token = loginDatabase(payload.email, payload.password)
+async def login(payload: authRequest, response: Response):
+    result = loginDatabase(payload.email, payload.password)
     
-    if(token == None):
+    if(result["token"] == None):
         raise HTTPException(status_code=401, detail="E-mail ou senha inválidos.")
     
-    return {"token": token}
+    response.set_cookie(key="refresh_token", value=result["refresh_token"])
+
+    return {"token": result["token"]}
+
+@router.post("/login/refresh")
+async def refreshToken(refresh_token: Annotated[str | None, Cookie()] = None):
+    print(refresh_token)
+
+    result = validateRefreshToken(refresh_token)
+
+    if(result == None):
+        raise HTTPException(status_code=401, detail="Token inválido ou expirado.")
+
+    return {"token": result}
+
+@router.post("/logout")
+async def logout(user_id: str = Depends(get_current_user_id), refresh_token: Annotated[str | None, Cookie()] = None):
+    logoff(user_id, refresh_token)
 
 @router.post("/register", status_code=201)
 async def register(payload: registerRequest):
