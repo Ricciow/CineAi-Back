@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from database.users import validateJWT, login as loginDatabase, register as registerDatabase
+from pydantic import BaseModel
 
 router = APIRouter(
     prefix="/auth",
@@ -23,14 +24,18 @@ async def get_current_user_id(token: str = Depends(oauth2_scheme)):
     user_id = payload.get("user_id")
     return user_id
 
+class authRequest(BaseModel):
+    email: str
+    senha: str
+
 @router.post("/login")
-async def login(email: str, senha: str):
-    token = loginDatabase(email, senha)
+async def login(payload: authRequest):
+    token = loginDatabase(payload.email, payload.senha)
     return {"token": token}
 
 @router.post("/register", status_code=201)
-async def register(email: str, senha: str):
-    if(registerDatabase(email, senha)):
+async def register(payload: authRequest):
+    if(registerDatabase(payload.email, payload.senha)):
         return {"message": "User created successfully."}
     else:
         raise HTTPException(status_code=400, detail="Erro ao criar usuário.")
