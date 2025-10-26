@@ -25,5 +25,6 @@ if(client.is_mongos):
 db = client.get_database("cineai")
 
 chats = db["chats"]
+projects = db["projects"]
 users = db["users"]
 
