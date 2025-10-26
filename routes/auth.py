@@ -31,6 +31,10 @@ class authRequest(BaseModel):
 @router.post("/login")
 async def login(payload: authRequest):
     token = loginDatabase(payload.email, payload.senha)
+    
+    if(token == None):
+        raise HTTPException(status_code=401, detail="E-mail ou senha inválidos.")
+    
     return {"token": token}
 
 @router.post("/register", status_code=201)
@@ -39,4 +43,3 @@ async def register(payload: authRequest):
         return {"message": "User created successfully."}
     else:
         raise HTTPException(status_code=400, detail="Erro ao criar usuário.")
-    
