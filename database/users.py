@@ -93,11 +93,16 @@ def login(email, senha):
     }
 
 def logoff(user_id, refresh_token):
-    users.update_one({"_id": ObjectId(user_id)}, {
+    result = users.update_one({"_id": ObjectId(user_id)}, {
         "$pull": {
             "refreshToken": refresh_token
         }
     })
+
+    if(result.modified_count > 0):
+        return True
+    
+    return False
 
 def validateRefreshToken(refresh_token):
     """Valida token de refresh e retorna um jwt de usuário novo se válido"""

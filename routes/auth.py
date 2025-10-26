@@ -4,6 +4,7 @@ from database.users import validateJWT, login as loginDatabase, register as regi
 from pydantic import BaseModel
 from email_validator import validate_email
 from typing import Annotated
+import datetime
 
 router = APIRouter(
     prefix="/auth",
@@ -39,7 +40,7 @@ async def login(payload: authRequest, response: Response):
     if(result["token"] == None):
         raise HTTPException(status_code=401, detail="E-mail ou senha inválidos.")
     
-    response.set_cookie(key="refresh_token", value=result["refresh_token"], samesite="none", secure=True)
+    response.set_cookie(key="refresh_token", value=result["refresh_token"], samesite="none", secure=True, max_age=int(datetime.timedelta(days=7).total_seconds()))
 
     return {"token": result["token"]}
 
@@ -53,8 +54,12 @@ async def refreshToken(refresh_token: Annotated[str | None, Cookie()] = None):
     return {"token": result}
 
 @router.post("/logout")
-async def logout(user_id: str = Depends(get_current_user_id), refresh_token: Annotated[str | None, Cookie()] = None):
-    logoff(user_id, refresh_token)
+async def logout(response : Response, user_id: str = Depends(get_current_user_id), refresh_token: Annotated[str | None, Cookie()] = None):
+    success = logoff(user_id, refresh_token)
+    
+    if(success):
+        response.delete_cookie(key="refresh_token", samesite="none", secure=True)
+
 
 @router.post("/register", status_code=201)
 async def register(payload: registerRequest):
