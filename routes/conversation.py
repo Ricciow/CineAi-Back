@@ -26,10 +26,10 @@ class ConversationCreate(BaseModel):
 
 class MessageRequest(BaseModel):
     user_input: str
-    model: Modelos = Modelos.DeepSeek
+    model: Modelos = Modelos.GEMINI_25_FLASH
     persona: Personas = Personas.Roteirista
 
-def gerarResposta(id: str, prompt : str, modelo : Modelos = Modelos.DeepSeek, persona : Personas = Personas.Roteirista):
+def gerarResposta(id: str, prompt : str, modelo : Modelos = Modelos.GEMINI_25_FLASH, persona : Personas = Personas.Roteirista):
     userPrompt = {"role": "user", "content": prompt}
 
     historico = getChatHistory(id)["messages"]
@@ -62,6 +62,17 @@ async def get_conversation_history(conversation_id: str, user_id: str = Depends(
         raise HTTPException(status_code=404, detail="Conversa não encontrada.")
 
    return resultado["messages"]
+
+@router.get("/models")
+async def list_models():
+    modelos = []
+    for modelo in Modelos:
+        modelos.append({
+            "name": modelo.valor["name"],
+            "model": modelo.valor["model"],
+            "provider": modelo.valor["provider"]
+        })
+    return modelos
 
 @router.get("/{conversation_id}",)
 async def get_conversation_history(conversation_id: str, user_id: str = Depends(get_current_user_id)):
