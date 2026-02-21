@@ -7,7 +7,7 @@ from typing import Annotated
 import datetime
 
 router = APIRouter(
-    prefix="/auth",
+    prefix="/api/auth",
     tags=["auth"],
 )
 

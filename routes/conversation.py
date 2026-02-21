@@ -13,7 +13,7 @@ import json
 from pydantic import BaseModel
 
 router = APIRouter(
-    prefix="/conversation",
+    prefix="/api/conversation",
     tags=["conversation"],
 )
 
