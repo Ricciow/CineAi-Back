@@ -10,7 +10,7 @@ from routes.auth import router as authRouter
 app = FastAPI()
 load_dotenv()
 
-origins = os.environ.get("FRONTEND_URLS", "").split(",")
+origins = ["cineai.glitchdev.cloud"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

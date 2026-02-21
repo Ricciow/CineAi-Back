@@ -1,0 +1,28 @@
+services:
+  backend:
+    image: ricciow/cine-ai-back:latest
+    container_name: cine-ai-back
+    depends_on:
+      - mongodb
+    env_file:
+      - .env
+    networks:
+      - web-public
+      - backend-internal
+
+  mongodb:
+    image: mongo:8
+    container_name: cine-ai-mongo
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - backend-internal
+
+volumes:
+  mongo_data:
+
+networks:
+  backend-internal:
+    driver: bridge
+  web-public:
+    external: true

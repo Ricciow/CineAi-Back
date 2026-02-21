@@ -1,26 +1,11 @@
 import pymongo
 
-from dotenv import load_dotenv
-import os
+DATABASE_URL = "mongodb://mongodb:27017"
 
-load_dotenv()
-DATABASE_URL = os.environ.get("DATABASE_URL", "").split(",")
-DEVELOPMENT = os.environ.get("DEVELOPMENT", "false")
-if(DEVELOPMENT == "true"):
-    DEVELOPMENT = True
-else:
-    DEVELOPMENT = False
+client = pymongo.MongoClient(DATABASE_URL)
 
-client = pymongo.MongoClient(
-    host=DATABASE_URL,
-    tls=True,
-    tlsAllowInvalidCertificates=DEVELOPMENT,
-    retryWrites=False,
-)
-
-print("Conectando com CosmoDB...")
-if(client.is_mongos):
-    print("Conectado com CosmoDB")
+print("Conectando com MongoDB...")
+print("Conectado com MongoDB")
 
 db = client.get_database("cineai")
 
