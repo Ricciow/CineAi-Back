@@ -6,3 +6,6 @@ argon2-cffi
 PyJWT
 email-validator
 uvicorn
+pydantic[email]
+dnspython
+pydantic-settings

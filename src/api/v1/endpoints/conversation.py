@@ -4,8 +4,7 @@ from fastapi.responses import StreamingResponse
 from src.schemas.chat import (
     ConversationUpdate, 
     ConversationCreate, 
-    MessageRequest,
-    ChatResponse
+    MessageRequest
 )
 from src.repositories.chat_repository import chat_repository
 from src.services.ai_service import ai_service
