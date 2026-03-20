@@ -91,6 +91,22 @@ src/
     A API estará disponível em `http://localhost:8000/api/v1`.
     A documentação automática (Swagger) pode ser acessada em `http://localhost:8000/docs`.
 
+## 🧪 Testes
+
+O projeto utiliza **Pytest** para testes unitários e de integração.
+
+### Como Executar os Testes
+
+1.  Instale as dependências de desenvolvimento:
+    ```bash
+    pip install -r requirements-dev.txt
+    ```
+
+2.  Execute todos os testes:
+    ```bash
+    pytest
+    ```
+
 ## 📜 Licença
 
 Este projeto é para fins acadêmicos.
