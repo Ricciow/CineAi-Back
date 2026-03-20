@@ -14,7 +14,7 @@ class Settings:
     
     DATABASE_URL: str = os.environ.get("DATABASE_URL", "")
     DEVELOPMENT: bool = os.environ.get("DEVELOPMENT", "false").lower() == "true"
-    FRONTEND_URLS: list[str] = os.environ.get("FRONTEND_URLS", "").split(",")
+    FRONTEND_URLS: list[str] = os.environ.get("FRONTEND_URLS", "http://localhost:5173,cineai.glitchdev.cloud").split(",")
     
     OPENROUTER_API_KEY: str = os.environ.get("API_KEY", "")
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
