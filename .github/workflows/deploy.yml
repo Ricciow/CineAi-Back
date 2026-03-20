@@ -55,7 +55,7 @@ jobs:
             cd /app/cine-ai-back
 
             # 2. Recriando o .env
-            echo "API_KEY=${{ secrets.API_KEY }}" > .env
+            echo "OPENROUTER_API_KEY=${{ secrets.API_KEY }}" > .env
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
             
             # 3. Baixa a nova imagem e atualiza
