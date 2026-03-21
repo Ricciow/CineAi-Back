@@ -33,3 +33,4 @@ db = client.get_database("cineai")
 chats = db["chats"]
 projects = db["projects"]
 users = db["users"]
+analytics = db["analytics"]

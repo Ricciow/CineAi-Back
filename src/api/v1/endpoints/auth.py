@@ -60,6 +60,11 @@ async def logout(
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(payload: RegisterRequest):
+    if not settings.ALLOW_REGISTRATION:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="O cadastro de novos usuários está temporariamente desativado."
+        )
     result = auth_service.register_user(payload.email, payload.password, payload.username)
     if result["success"]:
         return {"detail": result["message"]}
