@@ -6,6 +6,7 @@ os.environ["SECRET_KEY"] = "test-secret-key"
 os.environ["DATABASE_URL"] = "mongodb://localhost:27017"
 os.environ["OPENROUTER_API_KEY"] = "test-key"
 os.environ["FRONTEND_URLS"] = '["http://localhost:5173"]'
+os.environ["ALLOW_REGISTRATION"] = "True"
 
 # Mock DotEnvSettingsSource to avoid issues with existing .env file during tests
 try:

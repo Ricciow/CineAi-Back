@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.responses import StreamingResponse
 from src.schemas.chat import (
@@ -46,7 +47,7 @@ async def get_conversation_history(
     conversation_id: str, 
     user_id: str = Depends(get_current_user_id)
 ):
-    history = chat_repository.get_history(conversation_id)
+    history = chat_repository.get_history(conversation_id, user_id)
     if history is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
@@ -63,7 +64,7 @@ async def get_conversation(
     conversation_id: str, 
     user_id: str = Depends(get_current_user_id)
 ):
-    chat = chat_repository.get_by_id(conversation_id)
+    chat = chat_repository.get_by_id(conversation_id, user_id)
     if chat is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
@@ -76,7 +77,7 @@ async def delete_conversation(
     conversation_id: str, 
     user_id: str = Depends(get_current_user_id)
 ):
-    success = chat_repository.delete(conversation_id)
+    success = chat_repository.delete(conversation_id, user_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
@@ -90,7 +91,7 @@ async def update_conversation_title(
     payload: ConversationUpdate, 
     user_id: str = Depends(get_current_user_id)
 ):
-    success = chat_repository.update_title(conversation_id, payload.title)
+    success = chat_repository.update_title(conversation_id, payload.title, user_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
@@ -104,6 +105,14 @@ async def send_message(
     payload: MessageRequest, 
     user_id: str = Depends(get_current_user_id)
 ):
+    # Verify ownership
+    chat = chat_repository.get_by_id(conversation_id, user_id)
+    if not chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Conversa não encontrada."
+        )
+
     return StreamingResponse(
         generate_response_and_store(
             conversation_id, 
@@ -119,8 +128,16 @@ async def create_conversation(
     payload: ConversationCreate, 
     user_id: str = Depends(get_current_user_id)
 ):
-    return chat_repository.create(payload.title, payload.description)
+    return chat_repository.create(
+        title=payload.title, 
+        description=payload.description, 
+        user_id=user_id,
+        project_id=payload.project_id
+    )
     
 @router.get("/")
-async def list_conversations(user_id: str = Depends(get_current_user_id)):
-    return chat_repository.list_all_descriptions()
+async def list_conversations(
+    project_id: Optional[str] = None,
+    user_id: str = Depends(get_current_user_id)
+):
+    return chat_repository.list_by_user(user_id, project_id)

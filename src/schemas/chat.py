@@ -8,6 +8,7 @@ class ConversationUpdate(BaseModel):
 class ConversationCreate(BaseModel):
     title: str
     description: str
+    project_id: Optional[str] = None
 
 class MessageRequest(BaseModel):
     user_input: str
