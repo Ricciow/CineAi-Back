@@ -6,7 +6,7 @@ Este é o back-end do projeto CineAI, um sistema de auxílio a roteiristas utili
 
 - **FastAPI**: Framework web moderno e de alta performance.
 - **MongoDB (CosmoDB)**: Banco de dados NoSQL para persistência de chats e usuários.
-- **OpenAI / OpenRouter**: Integração com modelos de linguagem (DeepSeek, Gemini).
+- **OpenAI / OpenRouter**: Integração com modelos de linguagem (Gemini, Stepfun, Minimax, Gemma).
 - **JWT (PyJWT)**: Autenticação baseada em tokens.
 - **Argon2**: Hashing de senhas seguro.
 - **Pydantic**: Validação de dados e esquemas.
@@ -42,7 +42,7 @@ src/
   - Histórico de mensagens persistente.
 - **Inteligência Artificial**:
   - Respostas em tempo real (Streaming).
-  - Suporte a múltiplos modelos (DeepSeek, Gemini 2.5).
+  - Suporte aos modelos Gemini 3 Flash, Stepfun 3.5 Flash, Minimax M2.5 e Gemma 4.
   - Personas configuráveis (ex: Roteirista).
 
 ## 🛠️ Como Executar

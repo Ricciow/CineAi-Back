@@ -27,7 +27,7 @@ class TestAIService:
         
         generator = service.generate_response_stream(
             history=history,
-            model=AIModel.DEEPSEEK,
+            model=AIModel.GEMINI_3_FLASH,
             persona=AIPersona.ROTEIRISTA
         )
         
