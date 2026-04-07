@@ -11,7 +11,7 @@ class ConversationCreate(BaseModel):
 
 class MessageRequest(BaseModel):
     user_input: str
-    model: AIModel = AIModel.GEMINI_2_5_FLASH
+    model: AIModel = AIModel.GEMINI_3_FLASH
     persona: AIPersona = AIPersona.ROTEIRISTA
 
 class Message(BaseModel):
