@@ -14,7 +14,7 @@ class AIService:
     def generate_response_stream(
         self, 
         history: List[dict], 
-        model: AIModel = AIModel.GEMINI_3_FLASH, 
+        model: AIModel = AIModel.GEMINI_2_5_FLASH, 
         persona: AIPersona = AIPersona.ROTEIRISTA
     ) -> Generator[dict, None, None]:
         
