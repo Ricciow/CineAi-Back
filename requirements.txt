@@ -1,5 +1,6 @@
 fastapi
 openai
+google-generativeai
 python-dotenv
 pymongo
 argon2-cffi
