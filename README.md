@@ -42,7 +42,7 @@ src/
   - Histórico de mensagens persistente.
 - **Inteligência Artificial**:
   - Respostas em tempo real (Streaming).
-  - Suporte aos modelos Gemini 3 Flash, Stepfun 3.5 Flash e Minimax M2.5.
+  - Suporte aos modelos Gemini 2.5 Flash, Stepfun 3.5 Flash e Minimax M2.5.
   - Personas configuráveis (ex: Roteirista).
 
 ## 🛠️ Como Executar
