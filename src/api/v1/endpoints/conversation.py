@@ -119,8 +119,8 @@ async def send_message(
             conversation_id, 
             payload.user_input, 
             user_id,
-            model=payload.model, 
-            persona=payload.persona
+            model=payload.model or AIModel.GEMINI_2_5_FLASH, 
+            persona=payload.persona or AIPersona.ROTEIRISTA
         ), 
         media_type="text/event-stream"
     )
