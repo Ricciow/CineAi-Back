@@ -35,7 +35,7 @@ async def generate_response_and_store(
         "reasoning": "",
     }
 
-    for chunk in ai_service.generate_response_stream(full_history, model, persona):
+    async for chunk in ai_service.generate_response_stream(full_history, model, persona):
         assistant_response["content"] += chunk["content"]
         assistant_response["reasoning"] += chunk["reasoning"]
         yield json.dumps(chunk) + "\n"
@@ -122,7 +122,12 @@ async def send_message(
             model=payload.model or AIModel.GEMINI_3_FLASH, 
             persona=payload.persona or AIPersona.ROTEIRISTA
         ), 
-        media_type="text/event-stream"
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
     )
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_conversation(

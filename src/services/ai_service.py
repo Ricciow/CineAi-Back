@@ -1,32 +1,32 @@
 import json
-from openai import OpenAI
-from typing import Generator, List
+from openai import AsyncOpenAI
+from typing import AsyncGenerator, List
 from src.core.config import settings
 from src.models.ai import AIModel, AIPersona
 
 class AIService:
     def __init__(self):
-        self.client = OpenAI(
+        self.client = AsyncOpenAI(
             base_url=settings.OPENROUTER_BASE_URL,
             api_key=settings.OPENROUTER_API_KEY,
         )
 
-    def generate_response_stream(
+    async def generate_response_stream(
         self, 
         history: List[dict], 
         model: AIModel = AIModel.GEMINI_3_FLASH, 
         persona: AIPersona = AIPersona.ROTEIRISTA
-    ) -> Generator[dict, None, None]:
+    ) -> AsyncGenerator[dict, None]:
         
         messages = [{"role": "system", "content": persona.value}] + history
 
-        completion = self.client.chat.completions.create(
+        completion = await self.client.chat.completions.create(
             model=model.value,
             messages=messages,
             stream=True
         )
 
-        for chunk in completion:
+        async for chunk in completion:
             try:
                 delta = chunk.choices[0].delta
                 response_chunk = {

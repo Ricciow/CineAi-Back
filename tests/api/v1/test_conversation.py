@@ -84,7 +84,7 @@ class TestConversationEndpoints:
             "/api/v1/conversation/123/message",
             json={
                 "user_input": "hi",
-                "model": "google/gemini-2.5-flash",
+                "model": "google/gemini-3-flash-preview",
                 "persona": "Você é um roteirista, ajude o usuário a redigir roteiros quando pedido"
             }
         )
