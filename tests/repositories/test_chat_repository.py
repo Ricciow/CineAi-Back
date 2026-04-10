@@ -67,3 +67,30 @@ class TestChatRepository:
 
         assert result is True
         mock_chats.delete_one.assert_called_once_with({"_id": mock_id, "user_id": user_id})
+
+    @patch("src.repositories.chat_repository.chats")
+    def test_get_history(self, mock_chats):
+        mock_id = ObjectId("60d5ecb54f1a2c001f8e4e1a")
+        user_id = "user123"
+        messages = [{"role": "user", "content": "hello"}]
+        mock_chats.find_one.return_value = {"messages": messages}
+
+        result = ChatRepository.get_history(str(mock_id), user_id)
+
+        assert result == messages
+        mock_chats.find_one.assert_called_once_with({"_id": mock_id, "user_id": user_id}, {"messages": 1})
+
+    @patch("src.repositories.chat_repository.chats")
+    def test_add_message(self, mock_chats):
+        mock_id = ObjectId("60d5ecb54f1a2c001f8e4e1a")
+        user_id = "user123"
+        message = {"role": "assistant", "content": "hi"}
+        mock_chats.update_one.return_value = MagicMock(modified_count=1)
+
+        result = ChatRepository.add_message(str(mock_id), message, user_id)
+
+        assert result is True
+        mock_chats.update_one.assert_called_once_with(
+            {"_id": mock_id, "user_id": user_id}, 
+            {"$push": {"messages": message}}
+        )

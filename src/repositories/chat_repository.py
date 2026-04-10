@@ -47,9 +47,9 @@ class ChatRepository:
         return results
 
     @staticmethod
-    def add_message(chat_id: str, message: dict) -> bool:
+    def add_message(chat_id: str, message: dict, user_id: str) -> bool:
         result = chats.update_one(
-            {"_id": ObjectId(chat_id)}, 
+            {"_id": ObjectId(chat_id), "user_id": user_id}, 
             {"$push": {"messages": message}}
         )
         return result.modified_count > 0

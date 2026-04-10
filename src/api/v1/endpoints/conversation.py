@@ -17,30 +17,31 @@ router = APIRouter()
 async def generate_response_and_store(
     chat_id: str, 
     prompt: str, 
+    user_id: str,
     model: AIModel, 
     persona: AIPersona
 ):
     user_message = {"role": "user", "content": prompt}
-    history = chat_repository.get_history(chat_id) or []
-    
+    history = chat_repository.get_history(chat_id, user_id) or []
+
     # Store user message
-    chat_repository.add_message(chat_id, user_message)
-    
+    chat_repository.add_message(chat_id, user_message, user_id)
+
     full_history = history + [user_message]
-    
+
     assistant_response = {
         "role": "assistant",
         "content": "",
         "reasoning": "",
     }
-    
+
     for chunk in ai_service.generate_response_stream(full_history, model, persona):
         assistant_response["content"] += chunk["content"]
         assistant_response["reasoning"] += chunk["reasoning"]
         yield json.dumps(chunk) + "\n"
 
     # Store full assistant response
-    chat_repository.add_message(chat_id, assistant_response)
+    chat_repository.add_message(chat_id, assistant_response, user_id)
 
 @router.get("/history/{conversation_id}")
 async def get_conversation_history(
@@ -117,12 +118,12 @@ async def send_message(
         generate_response_and_store(
             conversation_id, 
             payload.user_input, 
+            user_id,
             model=payload.model, 
             persona=payload.persona
         ), 
         media_type="text/event-stream"
     )
-
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_conversation(
     payload: ConversationCreate, 
