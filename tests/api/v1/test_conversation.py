@@ -95,6 +95,6 @@ class TestConversationEndpoints:
             "123", 
             "hi", 
             user_id,
-            model=AIModel.GEMINI_2_5_FLASH,
+            model=AIModel.GEMINI_3_FLASH,
             persona=AIPersona.ROTEIRISTA
         )

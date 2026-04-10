@@ -12,7 +12,7 @@ class ConversationCreate(BaseModel):
 
 class MessageRequest(BaseModel):
     user_input: str
-    model: Optional[AIModel] = AIModel.GEMINI_2_5_FLASH
+    model: Optional[AIModel] = AIModel.GEMINI_3_FLASH
     persona: Optional[AIPersona] = AIPersona.ROTEIRISTA
 
 class Message(BaseModel):
