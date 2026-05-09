@@ -1,7 +1,8 @@
-from typing import Generator, Optional
+from typing import Generator, Optional, Any
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from src.services.auth_service import auth_service
+from src.repositories.user_repository import user_repository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
@@ -14,3 +15,13 @@ def get_current_user_id(token: str = Depends(oauth2_scheme)) -> str:
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user_id
+
+async def get_current_user(user_id: str = Depends(get_current_user_id)) -> dict:
+    user = user_repository.get_by_id(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuário não encontrado"
+        )
+    user["id"] = str(user.pop("_id"))
+    return user

@@ -61,17 +61,41 @@ async def generate_response_and_store(
         error_msg = {"role": "assistant", "content": f"\n\n[Erro: {str(e)}]", "reasoning": ""}
         yield json.dumps(error_msg) + "\n"
 
+async def check_chat_permission(chat_id: str, user_id: str, permission: str):
+    chat = chat_repository.get_by_id(chat_id)
+    if not chat:
+        raise HTTPException(status_code=404, detail="Conversa não encontrada")
+    
+    if chat.get("project_id"):
+        from src.repositories.project_repository import project_repository
+        project = project_repository.get_by_id(chat["project_id"])
+        if not project:
+             raise HTTPException(status_code=404, detail="Projeto não encontrado")
+        
+        is_owner = project["user_id"] == user_id
+        member = next((m for m in project.get("members", []) if m["user_id"] == user_id), None)
+        
+        if not is_owner and not member:
+            raise HTTPException(status_code=403, detail="Sem acesso a este projeto")
+        
+        if is_owner or member["role"] == "admin":
+            return chat
+            
+        if not member["permissions"].get(permission, False):
+            raise HTTPException(status_code=403, detail=f"Você não tem permissão para: {permission}")
+    else:
+        if chat["user_id"] != user_id:
+            raise HTTPException(status_code=403, detail="Sem acesso a esta conversa")
+            
+    return chat
+
 @router.get("/history/{conversation_id}")
 async def get_conversation_history(
     conversation_id: str, 
     user_id: str = Depends(get_current_user_id)
 ):
-    history = chat_repository.get_history(conversation_id, user_id)
-    if history is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Conversa não encontrada."
-        )
+    await check_chat_permission(conversation_id, user_id, "read")
+    history = chat_repository.get_history(conversation_id)
     return history
 
 @router.get("/models")
@@ -83,25 +107,29 @@ async def get_conversation(
     conversation_id: str, 
     user_id: str = Depends(get_current_user_id)
 ):
-    chat = chat_repository.get_by_id(conversation_id, user_id)
-    if chat is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Conversa não encontrada."
-        )
-    return chat
+    return await check_chat_permission(conversation_id, user_id, "read")
 
 @router.delete("/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_conversation(
     conversation_id: str, 
     user_id: str = Depends(get_current_user_id)
 ):
-    success = chat_repository.delete(conversation_id, user_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Conversa não encontrada."
-        )
+    chat = chat_repository.get_by_id(conversation_id)
+    if not chat:
+        raise HTTPException(status_code=404, detail="Conversa não encontrada")
+    
+    # Only owner of chat or project admin can delete
+    can_delete = chat["user_id"] == user_id
+    if chat.get("project_id"):
+        from src.repositories.project_repository import project_repository
+        project = project_repository.get_by_id(chat["project_id"])
+        if project and (project["user_id"] == user_id or any(m["user_id"] == user_id and m["role"] == "admin" for m in project.get("members", []))):
+            can_delete = True
+            
+    if not can_delete:
+        raise HTTPException(status_code=403, detail="Sem permissão para deletar")
+        
+    chat_repository.delete(conversation_id)
     return None
 
 @router.patch("/{conversation_id}")
@@ -110,12 +138,8 @@ async def update_conversation_title(
     payload: ConversationUpdate, 
     user_id: str = Depends(get_current_user_id)
 ):
-    success = chat_repository.update_title(conversation_id, payload.title, user_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Conversa não encontrada."
-        )
+    await check_chat_permission(conversation_id, user_id, "read") # Assume read for title edit for now or reuse member check
+    success = chat_repository.update_title(conversation_id, payload.title)
     return {"detail": "Título atualizado com sucesso"}
 
 @router.post("/{conversation_id}/message")
@@ -124,13 +148,7 @@ async def send_message(
     payload: MessageRequest, 
     user_id: str = Depends(get_current_user_id)
 ):
-    # Verify ownership
-    chat = chat_repository.get_by_id(conversation_id, user_id)
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Conversa não encontrada."
-        )
+    await check_chat_permission(conversation_id, user_id, "send_messages")
 
     return StreamingResponse(
         generate_response_and_store(
@@ -147,11 +165,24 @@ async def send_message(
             "X-Accel-Buffering": "no"
         }
     )
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_conversation(
     payload: ConversationCreate, 
     user_id: str = Depends(get_current_user_id)
 ):
+    if payload.project_id:
+        from src.repositories.project_repository import project_repository
+        project = project_repository.get_by_id(payload.project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Projeto não encontrado")
+            
+        is_owner = project["user_id"] == user_id
+        member = next((m for m in project.get("members", []) if m["user_id"] == user_id), None)
+        
+        if not is_owner and (not member or (member["role"] == "member" and not member["permissions"].get("create_chats"))):
+            raise HTTPException(status_code=403, detail="Sem permissão para criar chats neste projeto")
+
     return chat_repository.create(
         title=payload.title, 
         description=payload.description, 
@@ -164,4 +195,16 @@ async def list_conversations(
     project_id: Optional[str] = None,
     user_id: str = Depends(get_current_user_id)
 ):
+    if project_id:
+        from src.repositories.project_repository import project_repository
+        project = project_repository.get_by_id(project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Projeto não encontrado")
+        
+        is_owner = project["user_id"] == user_id
+        is_member = any(m["user_id"] == user_id for m in project.get("members", []))
+        
+        if not is_owner and not is_member:
+             raise HTTPException(status_code=403, detail="Sem acesso ao projeto")
+
     return chat_repository.list_by_user(user_id, project_id)
