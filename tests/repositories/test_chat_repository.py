@@ -53,7 +53,7 @@ class TestChatRepository:
 
         assert len(result) == 1
         mock_chats.find.assert_called_once_with(
-            {"user_id": user_id, "project_id": project_id},
+            {"project_id": project_id},
             {"title": 1, "description": 1, "project_id": 1}
         )
 

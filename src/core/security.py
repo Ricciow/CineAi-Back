@@ -6,12 +6,13 @@ from src.core.config import settings
 
 ph = PasswordHasher()
 
-def create_access_token(subject: Union[str, Any], username: str) -> str:
+def create_access_token(subject: Union[str, Any], username: str, email: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode = {
         "exp": expire, 
         "user_id": str(subject),
-        "username": username
+        "username": username,
+        "email": email
     }
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt

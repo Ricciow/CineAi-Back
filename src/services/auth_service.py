@@ -35,8 +35,9 @@ class AuthService:
         
         user_id = str(user["_id"])
         username = user["username"]
+        email = user["email"]
         
-        access_token = create_access_token(user_id, username)
+        access_token = create_access_token(user_id, username, email)
         refresh_token = create_refresh_token(user_id)
         
         user_repository.update_refresh_tokens(user_id, refresh_token, push=True)
@@ -59,7 +60,7 @@ class AuthService:
         if not user or refresh_token not in user.get("refreshToken", []):
             return None
         
-        return create_access_token(user_id, user["username"])
+        return create_access_token(user_id, user["username"], user["email"])
 
     @staticmethod
     def validate_jwt(token: str) -> Optional[str]:

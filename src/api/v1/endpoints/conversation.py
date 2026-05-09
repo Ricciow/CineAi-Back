@@ -77,7 +77,7 @@ async def check_chat_permission(chat_id: str, user_id: str, permission: str):
         if is_owner or member["role"] == "admin":
             return chat
             
-        if not member["permissions"].get(permission, False):
+        if not member.get("permissions", {}).get(permission, False):
             raise HTTPException(status_code=403, detail=f"Você não tem permissão para: {permission}")
     else:
         if chat["user_id"] != user_id:

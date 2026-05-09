@@ -44,9 +44,10 @@ class ChatRepository:
 
     @staticmethod
     def list_by_user(user_id: str, project_id: Optional[str] = None) -> List[dict]:
-        query = {"user_id": user_id}
         if project_id:
-            query["project_id"] = project_id
+            query = {"project_id": project_id}
+        else:
+            query = {"user_id": user_id, "project_id": None}
             
         cursor = chats.find(query, {"title": 1, "description": 1, "project_id": 1})
         results = []

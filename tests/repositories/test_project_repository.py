@@ -51,7 +51,12 @@ class TestProjectRepository:
         assert len(result) == 2
         assert result[0]["name"] == "P1"
         assert result[1]["name"] == "P2"
-        mock_projects.find.assert_called_once_with({"user_id": user_id})
+        mock_projects.find.assert_called_once_with({
+            "$or": [
+                {"user_id": user_id},
+                {"members.user_id": user_id}
+            ]
+        })
 
     @patch("src.repositories.project_repository.projects")
     def test_delete_success(self, mock_projects):
@@ -66,7 +71,7 @@ class TestProjectRepository:
     @patch("src.repositories.project_repository.projects")
     def test_update_success(self, mock_projects):
         mock_id = ObjectId("60d5ecb54f1a2c001f8e4e1a")
-        mock_projects.update_one.return_value = MagicMock(modified_count=1)
+        mock_projects.update_one.return_value = MagicMock(matched_count=1)
 
         update_data = {"name": "Updated Name"}
         result = ProjectRepository.update(str(mock_id), update_data)
