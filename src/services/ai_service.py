@@ -59,4 +59,20 @@ class AIService:
             logger.error(f"Streaming error in generate_response_stream: {e}")
             raise e
 
+    async def generate_description(self, prompt: str, response: str) -> str:
+        try:
+            messages = [
+                {"role": "system", "content": "Você é um assistente encarregado de resumir conversas. Crie uma descrição curta (máximo 10 palavras) para a conversa baseada no primeiro prompt do usuário e na resposta da IA."},
+                {"role": "user", "content": f"Prompt: {prompt}\nResposta: {response}"}
+            ]
+            completion = await self.client.chat.completions.create(
+                model=AIModel.GEMMA_4.value,
+                messages=messages,
+                max_tokens=50
+            )
+            return completion.choices[0].message.content.strip().replace('"', '')
+        except Exception as e:
+            logger.error(f"Error generating description: {e}")
+            return "Nova conversa"
+
 ai_service = AIService()

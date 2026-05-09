@@ -62,4 +62,12 @@ class ChatRepository:
         )
         return result.modified_count > 0
 
+    @staticmethod
+    def update_description(chat_id: str, description: str, user_id: str) -> bool:
+        result = chats.update_one(
+            {"_id": ObjectId(chat_id), "user_id": user_id}, 
+            {"$set": {"description": description}}
+        )
+        return result.modified_count > 0
+
 chat_repository = ChatRepository()

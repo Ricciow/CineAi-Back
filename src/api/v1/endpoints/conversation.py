@@ -47,6 +47,15 @@ async def generate_response_and_store(
         if assistant_response["content"] or assistant_response["reasoning"]:
             chat_repository.add_message(chat_id, assistant_response, user_id)
             
+            # If it's the first message, generate a description
+            if len(history) == 0:
+                new_description = await ai_service.generate_description(
+                    prompt, assistant_response["content"]
+                )
+                chat_repository.update_description(chat_id, new_description, user_id)
+                # Send the description in a final chunk
+                yield json.dumps({"description": new_description}) + "\n"
+            
     except Exception as e:
         logger.error(f"Error in generate_response_and_store: {e}")
         error_msg = {"role": "assistant", "content": f"\n\n[Erro: {str(e)}]", "reasoning": ""}
