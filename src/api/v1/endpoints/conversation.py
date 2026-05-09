@@ -25,9 +25,9 @@ async def generate_response_and_store(
 ):
     try:
         user_message = {"role": "user", "content": prompt}
-        history = chat_repository.get_history(chat_id, user_id) or []
+        history = chat_repository.get_history(chat_id) or []
 
-        chat_repository.add_message(chat_id, user_message, user_id)
+        chat_repository.add_message(chat_id, user_message)
 
         full_history = history + [user_message]
 
@@ -43,13 +43,13 @@ async def generate_response_and_store(
             yield json.dumps(chunk) + "\n"
 
         if assistant_response["content"] or assistant_response["reasoning"]:
-            chat_repository.add_message(chat_id, assistant_response, user_id)
+            chat_repository.add_message(chat_id, assistant_response)
             
             if len(history) == 0:
                 new_description = await ai_service.generate_description(
                     prompt, assistant_response["content"]
                 )
-                chat_repository.update_description(chat_id, new_description, user_id)
+                chat_repository.update_description(chat_id, new_description)
                 yield json.dumps({"description": new_description}) + "\n"
             
     except Exception as e:

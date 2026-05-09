@@ -17,30 +17,38 @@ class ChatRepository:
         return chat_document
 
     @staticmethod
-    def delete(chat_id: str) -> bool:
-        result = chats.delete_one({"_id": ObjectId(chat_id)})
+    def delete(chat_id: str, user_id: Optional[str] = None) -> bool:
+        query = {"_id": ObjectId(chat_id)}
+        if user_id:
+            query["user_id"] = user_id
+        result = chats.delete_one(query)
         return result.deleted_count > 0
 
     @staticmethod
-    def get_history(chat_id: str) -> Optional[List[dict]]:
-        doc = chats.find_one({"_id": ObjectId(chat_id)}, {"messages": 1})
+    def get_history(chat_id: str, user_id: Optional[str] = None) -> Optional[List[dict]]:
+        query = {"_id": ObjectId(chat_id)}
+        if user_id:
+            query["user_id"] = user_id
+        doc = chats.find_one(query, {"messages": 1})
         return doc.get("messages") if doc else None
 
     @staticmethod
-    def get_by_id(chat_id: str) -> Optional[dict]:
-        doc = chats.find_one({"_id": ObjectId(chat_id)})
+    def get_by_id(chat_id: str, user_id: Optional[str] = None) -> Optional[dict]:
+        query = {"_id": ObjectId(chat_id)}
+        if user_id:
+            query["user_id"] = user_id
+        doc = chats.find_one(query)
         if doc:
             doc["id"] = str(doc.pop("_id"))
         return doc
 
     @staticmethod
     def list_by_user(user_id: str, project_id: Optional[str] = None) -> List[dict]:
+        query = {"user_id": user_id}
         if project_id:
-            query = {"project_id": project_id}
-        else:
-            query = {"user_id": user_id}
+            query["project_id"] = project_id
             
-        cursor = chats.find(query, {"title": 1, "description": 1, "project_id": 1, "user_id": 1})
+        cursor = chats.find(query, {"title": 1, "description": 1, "project_id": 1})
         results = []
         for doc in cursor:
             doc["id"] = str(doc.pop("_id"))
@@ -48,25 +56,34 @@ class ChatRepository:
         return results
 
     @staticmethod
-    def add_message(chat_id: str, message: dict) -> bool:
+    def add_message(chat_id: str, message: dict, user_id: Optional[str] = None) -> bool:
+        query = {"_id": ObjectId(chat_id)}
+        if user_id:
+            query["user_id"] = user_id
         result = chats.update_one(
-            {"_id": ObjectId(chat_id)}, 
+            query, 
             {"$push": {"messages": message}}
         )
         return result.modified_count > 0
 
     @staticmethod
-    def update_title(chat_id: str, title: str) -> bool:
+    def update_title(chat_id: str, title: str, user_id: Optional[str] = None) -> bool:
+        query = {"_id": ObjectId(chat_id)}
+        if user_id:
+            query["user_id"] = user_id
         result = chats.update_one(
-            {"_id": ObjectId(chat_id)}, 
+            query, 
             {"$set": {"title": title}}
         )
         return result.modified_count > 0
 
     @staticmethod
-    def update_description(chat_id: str, description: str) -> bool:
+    def update_description(chat_id: str, description: str, user_id: Optional[str] = None) -> bool:
+        query = {"_id": ObjectId(chat_id)}
+        if user_id:
+            query["user_id"] = user_id
         result = chats.update_one(
-            {"_id": ObjectId(chat_id)}, 
+            query, 
             {"$set": {"description": description}}
         )
         return result.modified_count > 0

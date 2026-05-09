@@ -12,18 +12,26 @@ def override_get_current_user_id():
 app.dependency_overrides[get_current_user_id] = override_get_current_user_id
 
 class TestConversationEndpoints:
+    @patch("src.repositories.project_repository.project_repository")
     @patch("src.api.v1.endpoints.conversation.chat_repository")
-    def test_create_conversation(self, mock_repo):
+    def test_create_conversation(self, mock_repo, mock_proj_repo):
         user_id = "60d5ecb54f1a2c001f8e4e1a"
+        project_id = "60d5ecb54f1a2c001f8e4e1b"
+        mock_proj_repo.get_by_id.return_value = {
+            "id": project_id,
+            "user_id": user_id,
+            "members": []
+        }
         mock_repo.create.return_value = {
             "id": "123",
             "title": "New Chat",
-            "description": "Desc"
+            "description": "Desc",
+            "user_id": user_id
         }
         
         response = client.post(
             "/api/v1/conversation/",
-            json={"title": "New Chat", "description": "Desc", "project_id": "proj123"}
+            json={"title": "New Chat", "description": "Desc", "project_id": project_id}
         )
         
         assert response.status_code == 201
@@ -31,7 +39,7 @@ class TestConversationEndpoints:
             title="New Chat", 
             description="Desc", 
             user_id=user_id,
-            project_id="proj123"
+            project_id=project_id
         )
 
     @patch("src.api.v1.endpoints.conversation.chat_repository")
@@ -39,33 +47,42 @@ class TestConversationEndpoints:
         user_id = "60d5ecb54f1a2c001f8e4e1a"
         mock_repo.get_by_id.return_value = {
             "id": "123",
-            "title": "Chat 123"
+            "title": "Chat 123",
+            "user_id": user_id
         }
         
         response = client.get("/api/v1/conversation/123")
         
         assert response.status_code == 200
-        mock_repo.get_by_id.assert_called_once_with("123", user_id)
+        mock_repo.get_by_id.assert_called_once_with("123")
 
+    @patch("src.repositories.project_repository.project_repository")
     @patch("src.api.v1.endpoints.conversation.chat_repository")
-    def test_list_conversations_with_project(self, mock_repo):
+    def test_list_conversations_with_project(self, mock_repo, mock_proj_repo):
         user_id = "60d5ecb54f1a2c001f8e4e1a"
+        project_id = "60d5ecb54f1a2c001f8e4e1b"
+        mock_proj_repo.get_by_id.return_value = {
+            "id": project_id,
+            "user_id": user_id,
+            "members": []
+        }
         mock_repo.list_by_user.return_value = []
         
-        response = client.get("/api/v1/conversation/?project_id=proj123")
+        response = client.get(f"/api/v1/conversation/?project_id={project_id}")
         
         assert response.status_code == 200
-        mock_repo.list_by_user.assert_called_once_with(user_id, "proj123")
+        mock_repo.list_by_user.assert_called_once_with(user_id, project_id)
 
     @patch("src.api.v1.endpoints.conversation.chat_repository")
     def test_delete_conversation_success(self, mock_repo):
         user_id = "60d5ecb54f1a2c001f8e4e1a"
+        mock_repo.get_by_id.return_value = {"id": "123", "user_id": user_id}
         mock_repo.delete.return_value = True
         
         response = client.delete("/api/v1/conversation/123")
         
         assert response.status_code == 204
-        mock_repo.delete.assert_called_once_with("123", user_id)
+        mock_repo.delete.assert_called_once_with("123")
 
     @patch("src.api.v1.endpoints.conversation.generate_response_and_store")
     @patch("src.api.v1.endpoints.conversation.chat_repository")
@@ -88,7 +105,7 @@ class TestConversationEndpoints:
         )
         
         assert response.status_code == 200
-        mock_repo.get_by_id.assert_called_once_with("123", user_id)
+        mock_repo.get_by_id.assert_called_once_with("123")
         mock_gen.assert_called_once_with(
             "123", 
             "hi", 
