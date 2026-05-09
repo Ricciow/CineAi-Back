@@ -11,6 +11,7 @@ class ProjectPermissions(BaseModel):
 class ProjectMember(BaseModel):
     user_id: str
     email: str
+    username: Optional[str] = None
     role: str  # "admin" or "member"
     permissions: ProjectPermissions
 
@@ -28,6 +29,8 @@ class ProjectUpdate(BaseModel):
 class ProjectResponse(ProjectBase):
     id: str
     user_id: str
+    owner_email: Optional[str] = None
+    owner_username: Optional[str] = None
     members: List[ProjectMember] = []
 
 class MemberAddRequest(BaseModel):

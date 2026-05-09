@@ -14,17 +14,48 @@ router = APIRouter()
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 async def create_project(
     payload: ProjectCreate, 
-    user_id: str = Depends(get_current_user_id)
+    user: dict = Depends(get_current_user)
 ):
-    return project_repository.create(
+    project = project_repository.create(
         name=payload.name, 
-        user_id=user_id, 
+        user_id=user["id"], 
         description=payload.description
     )
+    project["owner_email"] = user["email"]
+    project["owner_username"] = user.get("username")
+    return project
 
 @router.get("/", response_model=List[ProjectResponse])
 async def list_projects(user_id: str = Depends(get_current_user_id)):
-    return project_repository.list_by_user(user_id)
+    projects = project_repository.list_by_user(user_id)
+    
+    # Cache para evitar buscas repetidas do mesmo usuário
+    user_details = {}
+    
+    for p in projects:
+        # Dono
+        owner_id = p["user_id"]
+        if owner_id not in user_details:
+            owner = user_repository.get_by_id(owner_id)
+            user_details[owner_id] = {
+                "email": owner["email"] if owner else None,
+                "username": owner["username"] if owner else None
+            }
+        p["owner_email"] = user_details[owner_id]["email"]
+        p["owner_username"] = user_details[owner_id]["username"]
+
+        # Membros
+        for m in p.get("members", []):
+            m_id = m["user_id"]
+            if m_id not in user_details:
+                member_user = user_repository.get_by_id(m_id)
+                user_details[m_id] = {
+                    "email": member_user["email"] if member_user else None,
+                    "username": member_user["username"] if member_user else None
+                }
+            m["username"] = user_details[m_id]["username"]
+        
+    return projects
 
 @router.get("/{project_id}", response_model=ProjectResponse)
 async def get_project(
@@ -46,6 +77,16 @@ async def get_project(
             status_code=status.HTTP_404_NOT_FOUND, 
             detail="Projeto não encontrado."
         )
+        
+    owner = user_repository.get_by_id(project["user_id"])
+    project["owner_email"] = owner["email"] if owner else None
+    project["owner_username"] = owner["username"] if owner else None
+
+    # Preencher usernames dos membros
+    for m in project.get("members", []):
+        m_user = user_repository.get_by_id(m["user_id"])
+        m["username"] = m_user["username"] if m_user else None
+    
     return project
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
