@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.responses import StreamingResponse
@@ -13,6 +14,7 @@ from src.api.deps import get_current_user_id
 from src.models.ai import AIModel, AIPersona
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 async def generate_response_and_store(
     chat_id: str, 
@@ -21,27 +23,34 @@ async def generate_response_and_store(
     model: AIModel, 
     persona: AIPersona
 ):
-    user_message = {"role": "user", "content": prompt}
-    history = chat_repository.get_history(chat_id, user_id) or []
+    try:
+        user_message = {"role": "user", "content": prompt}
+        history = chat_repository.get_history(chat_id, user_id) or []
 
-    # Store user message
-    chat_repository.add_message(chat_id, user_message, user_id)
+        # Store user message
+        chat_repository.add_message(chat_id, user_message, user_id)
 
-    full_history = history + [user_message]
+        full_history = history + [user_message]
 
-    assistant_response = {
-        "role": "assistant",
-        "content": "",
-        "reasoning": "",
-    }
+        assistant_response = {
+            "role": "assistant",
+            "content": "",
+            "reasoning": "",
+        }
 
-    async for chunk in ai_service.generate_response_stream(full_history, model, persona):
-        assistant_response["content"] += chunk["content"]
-        assistant_response["reasoning"] += chunk["reasoning"]
-        yield json.dumps(chunk) + "\n"
+        async for chunk in ai_service.generate_response_stream(full_history, model, persona):
+            assistant_response["content"] += chunk.get("content", "")
+            assistant_response["reasoning"] += chunk.get("reasoning", "")
+            yield json.dumps(chunk) + "\n"
 
-    # Store full assistant response
-    chat_repository.add_message(chat_id, assistant_response, user_id)
+        # Store full assistant response if we got anything
+        if assistant_response["content"] or assistant_response["reasoning"]:
+            chat_repository.add_message(chat_id, assistant_response, user_id)
+            
+    except Exception as e:
+        logger.error(f"Error in generate_response_and_store: {e}")
+        error_msg = {"role": "assistant", "content": f"\n\n[Erro: {str(e)}]", "reasoning": ""}
+        yield json.dumps(error_msg) + "\n"
 
 @router.get("/history/{conversation_id}")
 async def get_conversation_history(
