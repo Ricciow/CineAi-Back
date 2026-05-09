@@ -58,6 +58,49 @@ class TestChatRepository:
         )
 
     @patch("src.repositories.chat_repository.chats")
+    def test_list_by_user_no_project(self, mock_chats):
+        user_id = "user123"
+        mock_chats.find.return_value = [
+            {"_id": ObjectId(), "title": "C1", "user_id": user_id, "project_id": None}
+        ]
+
+        result = ChatRepository.list_by_user(user_id)
+
+        assert len(result) == 1
+        mock_chats.find.assert_called_once_with(
+            {"user_id": user_id, "project_id": None},
+            {"title": 1, "description": 1, "project_id": 1}
+        )
+
+    @patch("src.repositories.chat_repository.chats")
+    def test_update_title(self, mock_chats):
+        mock_id = ObjectId("60d5ecb54f1a2c001f8e4e1a")
+        user_id = "user123"
+        mock_chats.update_one.return_value = MagicMock(modified_count=1)
+
+        result = ChatRepository.update_title(str(mock_id), "New Title", user_id)
+
+        assert result is True
+        mock_chats.update_one.assert_called_once_with(
+            {"_id": mock_id, "user_id": user_id},
+            {"$set": {"title": "New Title"}}
+        )
+
+    @patch("src.repositories.chat_repository.chats")
+    def test_update_description(self, mock_chats):
+        mock_id = ObjectId("60d5ecb54f1a2c001f8e4e1a")
+        user_id = "user123"
+        mock_chats.update_one.return_value = MagicMock(modified_count=1)
+
+        result = ChatRepository.update_description(str(mock_id), "New Desc", user_id)
+
+        assert result is True
+        mock_chats.update_one.assert_called_once_with(
+            {"_id": mock_id, "user_id": user_id},
+            {"$set": {"description": "New Desc"}}
+        )
+
+    @patch("src.repositories.chat_repository.chats")
     def test_delete_success(self, mock_chats):
         mock_id = ObjectId("60d5ecb54f1a2c001f8e4e1a")
         user_id = "user123"

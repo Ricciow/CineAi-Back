@@ -81,3 +81,68 @@ class TestProjectRepository:
             {"_id": mock_id},
             {"$set": update_data}
         )
+
+    @patch("src.repositories.project_repository.projects")
+    def test_add_member(self, mock_projects):
+        mock_id = ObjectId("60d5ecb54f1a2c001f8e4e1a")
+        mock_projects.update_one.return_value = MagicMock(modified_count=1)
+        
+        member_data = {"email": "member@test.com", "role": "editor"}
+        result = ProjectRepository.add_member(str(mock_id), member_data)
+        
+        assert result is True
+        mock_projects.update_one.assert_called_once_with(
+            {"_id": mock_id},
+            {"$push": {"members": member_data}}
+        )
+
+    @patch("src.repositories.project_repository.projects")
+    def test_update_member(self, mock_projects):
+        mock_id = ObjectId("60d5ecb54f1a2c001f8e4e1a")
+        mock_projects.update_one.return_value = MagicMock(modified_count=1)
+        
+        update_data = {"role": "admin", "permissions": {"can_delete": True}}
+        result = ProjectRepository.update_member(str(mock_id), "member@test.com", update_data)
+        
+        assert result is True
+        # Check if the $set object is correctly built
+        expected_set = {
+            "members.$.role": "admin",
+            "members.$.permissions.can_delete": True
+        }
+        mock_projects.update_one.assert_called_once_with(
+            {"_id": mock_id, "members.email": "member@test.com"},
+            {"$set": expected_set}
+        )
+
+    @patch("src.repositories.project_repository.projects")
+    def test_remove_member(self, mock_projects):
+        mock_id = ObjectId("60d5ecb54f1a2c001f8e4e1a")
+        mock_projects.update_one.return_value = MagicMock(modified_count=1)
+        
+        result = ProjectRepository.remove_member(str(mock_id), "member@test.com")
+        
+        assert result is True
+        mock_projects.update_one.assert_called_once_with(
+            {"_id": mock_id},
+            {"$pull": {"members": {"email": "member@test.com"}}}
+        )
+
+    @patch("src.repositories.project_repository.projects")
+    def test_transfer_ownership(self, mock_projects):
+        mock_id = ObjectId("60d5ecb54f1a2c001f8e4e1a")
+        
+        result = ProjectRepository.transfer_ownership(str(mock_id), "old_owner", "new_owner", "new@test.com")
+        
+        assert result is True
+        assert mock_projects.update_one.call_count == 2
+        # First call removes new owner from members list
+        mock_projects.update_one.assert_any_call(
+            {"_id": mock_id},
+            {"$pull": {"members": {"user_id": "new_owner"}}}
+        )
+        # Second call sets new owner as project owner
+        mock_projects.update_one.assert_any_call(
+            {"_id": mock_id},
+            {"$set": {"user_id": "new_owner"}}
+        )

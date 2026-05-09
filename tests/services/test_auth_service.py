@@ -27,6 +27,17 @@ class TestAuthService:
         mock_user_repo.create.assert_not_called()
 
     @patch("src.services.auth_service.user_repository")
+    def test_register_user_username_exists(self, mock_user_repo):
+        mock_user_repo.get_by_email.return_value = None
+        mock_user_repo.get_by_username.return_value = {"username": "testuser"}
+
+        result = AuthService.register_user("test@test.com", "password123", "testuser")
+
+        assert result["success"] is False
+        assert result["message"] == "Username already exists."
+        mock_user_repo.create.assert_not_called()
+
+    @patch("src.services.auth_service.user_repository")
     @patch("src.services.auth_service.verify_password")
     @patch("src.services.auth_service.create_access_token")
     @patch("src.services.auth_service.create_refresh_token")
@@ -61,3 +72,57 @@ class TestAuthService:
         assert result["token"] is None
         assert result["refresh_token"] is None
         mock_user_repo.update_refresh_tokens.assert_not_called()
+
+    @patch("src.services.auth_service.user_repository")
+    def test_logout(self, mock_user_repo):
+        mock_user_repo.update_refresh_tokens.return_value = True
+        
+        result = AuthService.logout("user123", "token123")
+        
+        assert result is True
+        mock_user_repo.update_refresh_tokens.assert_called_once_with("user123", "token123", push=False)
+
+    @patch("src.services.auth_service.user_repository")
+    @patch("src.services.auth_service.decode_token")
+    @patch("src.services.auth_service.create_access_token")
+    def test_refresh_access_token_success(self, mock_create_access, mock_decode, mock_user_repo):
+        mock_decode.return_value = {"user_id": "user123"}
+        mock_user_repo.get_by_id.return_value = {
+            "username": "testuser",
+            "email": "test@test.com",
+            "refreshToken": ["token123"]
+        }
+        mock_create_access.return_value = "new_access_token"
+        
+        result = AuthService.refresh_access_token("token123")
+        
+        assert result == "new_access_token"
+        mock_create_access.assert_called_once_with("user123", "testuser", "test@test.com")
+
+    @patch("src.services.auth_service.decode_token")
+    def test_refresh_access_token_invalid_payload(self, mock_decode):
+        mock_decode.return_value = None
+        
+        result = AuthService.refresh_access_token("invalid_token")
+        
+        assert result is None
+
+    @patch("src.services.auth_service.user_repository")
+    @patch("src.services.auth_service.decode_token")
+    def test_refresh_access_token_token_not_in_db(self, mock_decode, mock_user_repo):
+        mock_decode.return_value = {"user_id": "user123"}
+        mock_user_repo.get_by_id.return_value = {
+            "refreshToken": ["other_token"]
+        }
+        
+        result = AuthService.refresh_access_token("token123")
+        
+        assert result is None
+
+    @patch("src.services.auth_service.decode_token")
+    def test_validate_jwt(self, mock_decode):
+        mock_decode.return_value = {"user_id": "user123"}
+        assert AuthService.validate_jwt("token123") == "user123"
+        
+        mock_decode.return_value = None
+        assert AuthService.validate_jwt("invalid") is None
