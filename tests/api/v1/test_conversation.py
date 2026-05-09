@@ -6,7 +6,6 @@ from src.models.ai import AIModel, AIPersona
 
 client = TestClient(app)
 
-# Mock dependency
 def override_get_current_user_id():
     return "60d5ecb54f1a2c001f8e4e1a"
 
@@ -74,7 +73,6 @@ class TestConversationEndpoints:
         user_id = "60d5ecb54f1a2c001f8e4e1a"
         mock_repo.get_by_id.return_value = {"id": "123", "user_id": user_id}
         
-        # Mock the generator
         async def mock_generator(*args, **kwargs):
             yield '{"content": "hello"}\n'
             

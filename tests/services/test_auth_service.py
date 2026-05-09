@@ -5,7 +5,6 @@ class TestAuthService:
     @patch("src.services.auth_service.user_repository")
     @patch("src.services.auth_service.get_password_hash")
     def test_register_user_success(self, mock_get_password_hash, mock_user_repo):
-        # Mocking data
         mock_user_repo.get_by_email.return_value = None
         mock_user_repo.get_by_username.return_value = None
         mock_get_password_hash.return_value = "hashed_password"
@@ -19,7 +18,6 @@ class TestAuthService:
 
     @patch("src.services.auth_service.user_repository")
     def test_register_user_email_exists(self, mock_user_repo):
-        # Mocking data
         mock_user_repo.get_by_email.return_value = {"email": "test@test.com"}
 
         result = AuthService.register_user("test@test.com", "password123", "testuser")
@@ -33,7 +31,6 @@ class TestAuthService:
     @patch("src.services.auth_service.create_access_token")
     @patch("src.services.auth_service.create_refresh_token")
     def test_login_success(self, mock_create_refresh, mock_create_access, mock_verify_password, mock_user_repo):
-        # Mocking data
         mock_user_repo.get_by_email.return_value = {
             "_id": "60d5ecb54f1a2c001f8e4e1a",
             "email": "test@test.com",
@@ -53,7 +50,6 @@ class TestAuthService:
     @patch("src.services.auth_service.user_repository")
     @patch("src.services.auth_service.verify_password")
     def test_login_invalid_password(self, mock_verify_password, mock_user_repo):
-        # Mocking data
         mock_user_repo.get_by_email.return_value = {
             "email": "test@test.com",
             "senha": "hashed_password"

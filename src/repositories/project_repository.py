@@ -26,7 +26,6 @@ class ProjectRepository:
 
     @staticmethod
     def list_by_user(user_id: str) -> List[dict]:
-        # Search for projects where the user is owner OR a member
         cursor = projects.find({
             "$or": [
                 {"user_id": user_id},
@@ -64,7 +63,6 @@ class ProjectRepository:
 
     @staticmethod
     def update_member(project_id: str, email: str, update_data: dict) -> bool:
-        # Construct the $set dictionary for the specific member in the list
         set_op = {}
         for key, value in update_data.items():
             if key == "permissions":
@@ -89,25 +87,17 @@ class ProjectRepository:
 
     @staticmethod
     def transfer_ownership(project_id: str, old_owner_id: str, new_owner_id: str, new_owner_email: str) -> bool:
-        # 1. Update the project user_id to the new owner
-        # 2. Add the old owner as an admin in the members list
-        # We'll use a transaction if possible, but for simplicity in this Mongo setup:
         
-        # Check if new owner is already in members, if so remove them from members list
         projects.update_one(
             {"_id": ObjectId(project_id)},
             {"$pull": {"members": {"user_id": new_owner_id}}}
         )
 
-        # Update owner
         projects.update_one(
             {"_id": ObjectId(project_id)},
             {"$set": {"user_id": new_owner_id}}
         )
         
-        # Add old owner as admin
-        # We need the old owner's email. For now, let's assume the service handles this logic
-        # and we just take the data.
         return True
 
 project_repository = ProjectRepository()

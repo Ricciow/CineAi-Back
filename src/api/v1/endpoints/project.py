@@ -38,7 +38,6 @@ async def get_project(
             detail="Projeto não encontrado."
         )
     
-    # Check if user is owner or member
     is_owner = project["user_id"] == user["id"]
     is_member = any(m["user_id"] == user["id"] for m in project.get("members", []))
     
@@ -78,7 +77,6 @@ async def update_project(
     if not project:
         raise HTTPException(status_code=404, detail="Projeto não encontrado")
     
-    # Only owner and admins can update project info
     is_owner = project["user_id"] == user_id
     is_admin = any(m["user_id"] == user_id and m["role"] == "admin" for m in project.get("members", []))
     
@@ -107,7 +105,6 @@ async def update_project(
     
     return project_repository.get_by_id(project_id)
 
-# --- Members Management ---
 
 @router.post("/{project_id}/members", status_code=status.HTTP_201_CREATED)
 async def add_member(
@@ -119,7 +116,6 @@ async def add_member(
     if not project:
         raise HTTPException(status_code=404, detail="Projeto não encontrado")
     
-    # Check permissions: Owner can add admin/member, Admin can only add member
     is_owner = project["user_id"] == user_id
     is_admin = any(m["user_id"] == user_id and m["role"] == "admin" for m in project.get("members", []))
     
@@ -129,14 +125,12 @@ async def add_member(
     if payload.role == "admin" and not is_owner:
         raise HTTPException(status_code=403, detail="Apenas o dono pode adicionar administradores")
 
-    # Check if user to add exists
     new_user = user_repository.get_by_email(payload.email)
     if not new_user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado. Ele deve se registrar primeiro.")
     
     new_user_id = str(new_user["_id"])
     
-    # Check if already a member or owner
     if project["user_id"] == new_user_id:
         raise HTTPException(status_code=400, detail="O usuário já é o dono do projeto")
     
@@ -170,12 +164,10 @@ async def update_member(
     if not is_owner and not is_admin:
         raise HTTPException(status_code=403, detail="Sem permissão")
 
-    # Find the member to update
     target_member = next((m for m in project.get("members", []) if m["email"] == email), None)
     if not target_member:
         raise HTTPException(status_code=404, detail="Membro não encontrado")
 
-    # Admins cannot edit other admins or the owner
     if is_admin and not is_owner:
         if target_member["role"] == "admin":
             raise HTTPException(status_code=403, detail="Admins não podem editar outros admins")
@@ -230,15 +222,10 @@ async def transfer_ownership(
     if new_owner_id == user["id"]:
         raise HTTPException(status_code=400, detail="Você já é o dono")
 
-    # Update logic
-    # 1. Update project user_id
-    # 2. Add old owner as admin in members
     project_repository.update(project_id, {"user_id": new_owner_id})
     
-    # Remove new owner from members if they were there
     project_repository.remove_member(project_id, payload.new_owner_email)
     
-    # Add old owner as admin
     old_owner_member = {
         "user_id": user["id"],
         "email": user["email"],

@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
-    # Default para conectar no container 'mongodb' do docker-compose
     DATABASE_URL: str = "mongodb://mongodb:27017"
     DEVELOPMENT: bool = False
     FRONTEND_URLS: List[str] = ["http://localhost:5173", "cineai.glitchdev.cloud"]

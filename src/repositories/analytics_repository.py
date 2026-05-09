@@ -14,7 +14,6 @@ class AnalyticsRepository:
 
     @staticmethod
     def get_stats() -> Dict:
-        # Agregado simples para facilitar a retirada dos dados
         pipeline = [
             {
                 "$group": {
@@ -30,7 +29,6 @@ class AnalyticsRepository:
         
         results = list(analytics.aggregate(pipeline))
         
-        # Limpar os emails (remover None e duplicados)
         for res in results:
             res["emails"] = list(set([e for e in res["emails"] if e]))
             

@@ -5,7 +5,6 @@ from src.api.deps import get_current_user_id
 
 client = TestClient(app)
 
-# Mock dependency
 def override_get_current_user_id():
     return "60d5ecb54f1a2c001f8e4e1a"
 
@@ -51,7 +50,6 @@ class TestProjectEndpoints:
 
     @patch("src.api.v1.endpoints.project.project_repository")
     def test_get_project_unauthorized(self, mock_repo):
-        # Different user
         mock_repo.get_by_id.return_value = {
             "id": "123",
             "name": "Project 123",

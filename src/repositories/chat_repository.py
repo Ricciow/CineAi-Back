@@ -35,8 +35,6 @@ class ChatRepository:
 
     @staticmethod
     def list_by_user(user_id: str, project_id: Optional[str] = None) -> List[dict]:
-        # If project_id is provided, we'll let the service layer handle if the user can see it.
-        # But for now, if project_id is given, we show chats of that project.
         if project_id:
             query = {"project_id": project_id}
         else:

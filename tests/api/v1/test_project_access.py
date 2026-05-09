@@ -5,7 +5,6 @@ from src.api.deps import get_current_user_id, get_current_user
 
 client = TestClient(app)
 
-# Mock dependencies
 OWNER_ID = "60d5ecb54f1a2c001f8e4e1a"
 ADMIN_ID = "60d5ecb54f1a2c001f8e4e1b"
 MEMBER_ID = "60d5ecb54f1a2c001f8e4e1c"
@@ -32,7 +31,6 @@ class TestProjectAccess:
             "_id": MagicMock(return_value=MEMBER_ID),
             "email": "member@example.com"
         }
-        # Mock MagicMock's string representation if needed, but repo uses str(_id)
         mock_user_repo.get_by_email.return_value["_id"] = MEMBER_ID
 
         response = client.post(
@@ -68,7 +66,6 @@ class TestProjectAccess:
 
     @patch("src.api.v1.endpoints.project.project_repository")
     def test_add_member_as_admin_failure(self, mock_project_repo):
-        # Override current user to be an Admin, not Owner
         def override_admin_user_id(): return ADMIN_ID
         app.dependency_overrides[get_current_user_id] = override_admin_user_id
         
@@ -86,7 +83,6 @@ class TestProjectAccess:
         assert response.status_code == 403
         assert response.json()["detail"] == "Apenas o dono pode adicionar administradores"
         
-        # Reset overrides
         app.dependency_overrides[get_current_user_id] = override_get_current_user_id
 
     @patch("src.api.v1.endpoints.project.project_repository")

@@ -7,11 +7,9 @@ class TestAIService:
     @pytest.mark.asyncio
     @patch("src.services.ai_service.AsyncOpenAI")
     async def test_generate_response_stream_success(self, mock_async_openai):
-        # Mock client and its behavior
         mock_client = AsyncMock()
         mock_async_openai.return_value = mock_client
         
-        # Mock completion chunks
         mock_chunk1 = AsyncMock()
         mock_chunk1.choices[0].delta.content = "Hello "
         mock_chunk1.choices[0].delta.reasoning = None
@@ -20,7 +18,6 @@ class TestAIService:
         mock_chunk2.choices[0].delta.content = "world!"
         mock_chunk2.choices[0].delta.reasoning = None
         
-        # Async generators are a bit tricky to mock with AsyncMock in some versions
         async def mock_generator():
             yield mock_chunk1
             yield mock_chunk2

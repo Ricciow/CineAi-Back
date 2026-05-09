@@ -27,7 +27,6 @@ async def generate_response_and_store(
         user_message = {"role": "user", "content": prompt}
         history = chat_repository.get_history(chat_id, user_id) or []
 
-        # Store user message
         chat_repository.add_message(chat_id, user_message, user_id)
 
         full_history = history + [user_message]
@@ -43,17 +42,14 @@ async def generate_response_and_store(
             assistant_response["reasoning"] += chunk.get("reasoning", "")
             yield json.dumps(chunk) + "\n"
 
-        # Store full assistant response if we got anything
         if assistant_response["content"] or assistant_response["reasoning"]:
             chat_repository.add_message(chat_id, assistant_response, user_id)
             
-            # If it's the first message, generate a description
             if len(history) == 0:
                 new_description = await ai_service.generate_description(
                     prompt, assistant_response["content"]
                 )
                 chat_repository.update_description(chat_id, new_description, user_id)
-                # Send the description in a final chunk
                 yield json.dumps({"description": new_description}) + "\n"
             
     except Exception as e:
@@ -118,7 +114,6 @@ async def delete_conversation(
     if not chat:
         raise HTTPException(status_code=404, detail="Conversa não encontrada")
     
-    # Only owner of chat or project admin can delete
     can_delete = chat["user_id"] == user_id
     if chat.get("project_id"):
         from src.repositories.project_repository import project_repository
@@ -138,7 +133,7 @@ async def update_conversation_title(
     payload: ConversationUpdate, 
     user_id: str = Depends(get_current_user_id)
 ):
-    await check_chat_permission(conversation_id, user_id, "read") # Assume read for title edit for now or reuse member check
+    await check_chat_permission(conversation_id, user_id, "read")
     success = chat_repository.update_title(conversation_id, payload.title)
     return {"detail": "Título atualizado com sucesso"}
 
