@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "mongodb://mongodb:27017"
     DEVELOPMENT: bool = False
     FRONTEND_URLS: List[str] = ["http://localhost:5173", "cineai.glitchdev.cloud"]
-    ALLOW_REGISTRATION: bool = False
+    ALLOW_REGISTRATION: bool = True
     
     OPENROUTER_API_KEY: str = ""
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
